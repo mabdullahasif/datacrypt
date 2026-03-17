@@ -16,12 +16,30 @@ from PySide6.QtCore import QProcess, QTimer, Signal, QObject
 
 def _find_engine_binary() -> str:
     """Locate the datacrypt engine binary."""
+    # Check if running as a PyInstaller bundle
+    is_frozen = getattr(sys, 'frozen', False)
+    
+    if is_frozen:
+        # 1. Check if bundled inside (e.g., via --add-data "datacrypt.exe;.")
+        bundle_dir = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+        inside_path = os.path.join(bundle_dir, "datacrypt.exe")
+        if os.path.isfile(inside_path) and os.access(inside_path, os.X_OK):
+            return inside_path
+            
+        # 2. Check the directory of the .exe (portable mode)
+        exe_dir = os.path.dirname(sys.executable)
+        external_path = os.path.join(exe_dir, "datacrypt.exe")
+        if os.path.isfile(external_path) and os.access(external_path, os.X_OK):
+            return external_path
+
+    # Standard discovery logic for development
     # This file is at: datacrypt/gui/modules/encryption_controller.py
     # We need to reach:  datacrypt/  (3 levels up)
     this_file = os.path.abspath(__file__)              # .../gui/modules/encryption_controller.py
     modules_dir = os.path.dirname(this_file)           # .../gui/modules/
     gui_dir = os.path.dirname(modules_dir)             # .../gui/
     project_root = os.path.dirname(gui_dir)            # .../datacrypt/
+    
     candidates = [
         os.path.join(project_root, "datacrypt.exe"),
         os.path.join(project_root, "datacrypt"),
@@ -127,7 +145,7 @@ class EncryptionController(QObject):
         if self._timer:
             self._timer.stop()
         self._secure_clear_password()
-        self.log_message.emit("🚫 Operation cancelled by user")
+        self.log_message.emit("Operation cancelled by user")
 
     def is_running(self) -> bool:
         """Check if an operation is in progress."""
