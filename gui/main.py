@@ -41,13 +41,17 @@ def main():
 
     app = QApplication(sys.argv)
 
-    # Set icon
-    icon_path = get_resource_path("app_icon.png")
+    # Set icon (platform-aware)
+    is_mac = sys.platform == "darwin"
+    icon_ext = "icns" if is_mac else "png"
+    icon_name = f"app_icon.{icon_ext}"
+    
+    icon_path = get_resource_path(icon_name)
     if os.path.exists(icon_path):
         app.setWindowIcon(QIcon(icon_path))
     else:
         # Check current dir as fallback for dev mode
-        dev_icon = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app_icon.png")
+        dev_icon = os.path.join(os.path.dirname(os.path.abspath(__file__)), icon_name)
         if os.path.exists(dev_icon):
             app.setWindowIcon(QIcon(dev_icon))
 

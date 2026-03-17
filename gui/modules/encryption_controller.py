@@ -18,17 +18,19 @@ def _find_engine_binary() -> str:
     """Locate the datacrypt engine binary."""
     # Check if running as a PyInstaller bundle
     is_frozen = getattr(sys, 'frozen', False)
+    is_win = sys.platform == "win32"
+    engine_name = "datacrypt.exe" if is_win else "datacrypt"
     
     if is_frozen:
-        # 1. Check if bundled inside (e.g., via --add-data "datacrypt.exe;.")
+        # 1. Check if bundled inside
         bundle_dir = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
-        inside_path = os.path.join(bundle_dir, "datacrypt.exe")
+        inside_path = os.path.join(bundle_dir, engine_name)
         if os.path.isfile(inside_path) and os.access(inside_path, os.X_OK):
             return inside_path
             
         # 2. Check the directory of the .exe (portable mode)
         exe_dir = os.path.dirname(sys.executable)
-        external_path = os.path.join(exe_dir, "datacrypt.exe")
+        external_path = os.path.join(exe_dir, engine_name)
         if os.path.isfile(external_path) and os.access(external_path, os.X_OK):
             return external_path
 
@@ -45,6 +47,8 @@ def _find_engine_binary() -> str:
         os.path.join(project_root, "datacrypt"),
         os.path.join(project_root, "build", "datacrypt.exe"),
         os.path.join(project_root, "build", "datacrypt"),
+        os.path.join(project_root, "gui", "datacrypt"),
+        os.path.join(project_root, "gui", "datacrypt.exe"),
     ]
 
     # Also check system PATH
